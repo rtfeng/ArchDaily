@@ -1,0 +1,11 @@
+'https://www.archdaily.com/',
+'http://www.archdaily.com/',
+'//www.archdaily.cn',
+'//www.plataformaarquitectura.cl',
+'//www.archdaily.mx',
+'http://my.archdaily.com/us/labels',
+'http://account.archdaily.com/us/users/profile',
+'//www.archdaily.com',
+'#',
+'https://chrome.google.com',
+'//boty.archdaily.com'
