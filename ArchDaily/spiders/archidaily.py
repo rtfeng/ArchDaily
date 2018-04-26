@@ -35,12 +35,13 @@ class ArchidailySpider(scrapy.Spider):
             # log.msg(url, level=log.CRITICAL)
             # Reduce regx match heuristic,
             if not url.startswith(tuple(ignore_urls)):
-                log.msg(url, level=log.CRITICAL)
+                # log.msg(url, level=log.CRITICAL)
                 # In search result page
                 if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
                     # Get project url
                     if re.match('/\d{6}/.*', url):
                         yield Request('https://www.archdaily.com/' + url, callback=self.parse)
+                        log.msg(url, level=log.CRITICAL)
                         # log.msg('--Details--' + url, level=log.CRITICAL)
                     # Get next result page
                     elif re.match('/search/projects/categories/houses\?page=\d*', url):
