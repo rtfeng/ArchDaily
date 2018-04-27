@@ -5,8 +5,8 @@ import re
 from scrapy import Selector, Request, log
 
 
-class ArchidailySpider(scrapy.Spider):
-    name = 'archidaily'
+class ArchdailySpider(scrapy.Spider):
+    name = 'archdaily'
     allowed_domains = ['www.archdaily.com']
     # start_urls = ['https://www.archdaily.com/']
     start_urls = ['https://www.archdaily.com/search/projects/categories/houses']
