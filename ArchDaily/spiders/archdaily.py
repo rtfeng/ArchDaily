@@ -40,12 +40,13 @@ class ArchdailySpider(scrapy.Spider):
                 if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
                     # Get project url
                     if re.match('/\d{6}/.*', url):
-                        yield Request('https://www.archdaily.com/' + url, callback=self.parse)
+                        # yield Request('https://www.archdaily.com/' + url, callback=self.parse)
                         log.msg(url, level=log.CRITICAL)
                         # log.msg('--Details--' + url, level=log.CRITICAL)
                     # Get next result page
                     elif re.match('/search/projects/categories/houses\?page=\d*', url):
-                        yield Request('https://www.archdaily.com/' + url, callback=self.parse)
+                        url = 'https://www.archdaily.com' + url
+                        yield Request(url, callback=self.parse)
                         # log.msg('--NextPage--' + url, level=log.CRITICAL)
                 # elif re.match('https://www.archdaily.com/\d{6}/.*', current_url):
                 #     # Select title
