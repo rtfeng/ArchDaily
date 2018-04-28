@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import re, os
+import re, os, datetime
 from ArchDaily.items import ArchdailyItem
 from scrapy import Selector, Request, log
 
@@ -38,8 +38,6 @@ class ArchdailySpider(scrapy.Spider):
                        '//boty.archdaily.com']
 
         current_url = response.url
-        body = response.body
-        unicode_body = response.body_as_unicode()
 
         hxs = Selector(response)
         # Enter the arch list page
@@ -60,7 +58,8 @@ class ArchdailySpider(scrapy.Spider):
             for i in range(len(items)):
                 item['title'] = title[i]
                 item['url'] = 'https://www.archdaily.com' + url[i]
-                item['pic'] = pic[i]
+                item['pic'] = pic[i].replace('small_jpg', 'slideshow')
+                item['date'] = datetime.datetime.now().strftime("%Y/%m/%d")
                 yield item
             # Get next page url
             next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()

@@ -14,4 +14,10 @@ class ArchdailyItem(scrapy.Item):
     title = scrapy.Field()
     url = scrapy.Field()
     pic = scrapy.Field()
+    date = scrapy.Field()
+    pass
+
+class ArchprojItem(scrapy.Item):
+    title = scrapy.Field()
+    picurls = scrapy.Field()
     pass

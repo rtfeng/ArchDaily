@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re, os
-from ArchDaily.items import ArchdailyItem
+from ArchDaily.items import ArchprojItem
 from scrapy import Selector, Request, log
 
 
-class ArchdailySpider(scrapy.Spider):
-    name = 'archdaily'
-    allowed_domains = ['www.archdaily.com']
+class ArchprojSpider(scrapy.Spider):
+    name = 'archproj'
+    allowed_domains = ['www.archdaily.com',
+                       'images.adsttc.com']
     # start_urls = ['https://www.archdaily.com/']
-    start_urls = ['https://www.archdaily.com/search/projects/categories/houses']
+    start_urls = ['https://www.archdaily.com/891738/loft-sao-paulo-treszerosete']
     custom_settings = {
         'ITEM_PIPELINES': {
             'ArchDaily.pipelines.MongoDBPipeline': 50
@@ -21,73 +22,26 @@ class ArchdailySpider(scrapy.Spider):
         # For local DB
         'MONGO_URI': "mongodb://127.0.0.1:27017",
         'MONGO_DATABASE': "archdaily",
-        'MONGO_COLLECTION': "archurl"
+        'MONGO_COLLECTION': "archproj"
     }
 
     def parse(self, response):
-        ignore_urls = ['https://www.archdaily.com',
-                       'http://www.archdaily.com',
-                       '//www.archdaily.cn',
-                       '//www.plataformaarquitectura.cl',
-                       '//www.archdaily.mx',
-                       'http://my.archdaily.com/us/labels',
-                       'http://account.archdaily.com/us/users/profile',
-                       '//www.archdaily.com',
-                       '#',
-                       'https://chrome.google.com',
-                       '//boty.archdaily.com']
-
         current_url = response.url
         body = response.body
         unicode_body = response.body_as_unicode()
+        item = ArchprojItem()
 
         hxs = Selector(response)
-        # Enter the arch list page
-        if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
-            # Read and parser current list page
-            items = hxs.xpath('//li[@class="afd-search-list__item nrd-search-list__item"]').extract()
-            title = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/h2[@class="afd-search-list__title"]/text()').extract()
-            url = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a[@class="afd-search-list__link"]/@href').extract()
-            pic = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/figure/img[@class="afd-search-list__img "]/@src').extract()
-            if len({len(items), len(title), len(url), len(pic)}) is not 1:
-                # Handle wrong items number
-                os._exit()
-            # Save items into MongoDB with pipeline
-            item = ArchdailyItem()
-            for i in range(len(items)):
-                item['title'] = title[i]
-                item['url'] = 'https://www.archdaily.com' + url[i]
-                item['pic'] = pic[i]
-                yield item
-            # Get next page url
-            next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()
-            # Add .pop() to pop url out of the list
-            next_url = 'https://www.archdaily.com' + next_url.pop()
-            # log.msg(next_url, level=log.CRITICAL)
-            # yield Request(next_url, callback=self.parse)
+        # Get title
+        title = hxs.xpath('//h1[@class="afd-title-big afd-title-big--left afd-title-big--full afd-title-big--bmargin-small afd-relativeposition"]/text()').extract()
+        # Add strip() to remove \n
+        item['title'] = title.pop().strip()
+        log.msg(item['title'])
+        picurls = hxs.xpath('//li[@class="gallery-thumbs-item"]/a/img[@class="b-lazy b-loaded"]/@src').extract()
+        log.msg(len(picurls))
+        for i in range(len(picurls)):
+            picurls[i] = picurls[i].replace('thumb_jpg', 'slideshow')
+        item['picurls'] = picurls
+        log.msg('\n'.join(item['picurls']))
 
-        # all_urls = hxs.xpath('//a/@href').extract()
-        # for url in all_urls:
-        #     # log.msg(url, level=log.CRITICAL)
-        #     # Reduce regx match heuristic,
-        #     if not url.startswith(tuple(ignore_urls)):
-        #         # log.msg(url, level=log.CRITICAL)
-        #         # In search result page
-        #         if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
-        #             # Get project url
-        #             if re.match('/\d{6}/.*', url):
-        #                 # yield Request('https://www.archdaily.com/' + url, callback=self.parse)
-        #                 log.msg(url, level=log.CRITICAL)
-        #                 # log.msg('--Details--' + url, level=log.CRITICAL)
-        #             # Get next result page
-        #             elif re.match('/search/projects/categories/houses\?page=\d*', url):
-        #                 url = 'https://www.archdaily.com' + url
-        #                 yield Request(url, callback=self.parse)
-        #                 # log.msg('--NextPage--' + url, level=log.CRITICAL)
-        #         # elif re.match('https://www.archdaily.com/\d{6}/.*', current_url):
-        #         #     # Select title
-        #         #     items = hxs.select('//div[@class="afd-title-big afd-title-big--left afd-title-big--full afd-title-big--bmargin-small afd-relativeposition"]/div')
-        #
+
