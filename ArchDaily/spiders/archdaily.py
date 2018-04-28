@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import re,os
+import re, os
 from ArchDaily.items import ArchdailyItem
 from scrapy import Selector, Request, log
 
@@ -14,12 +14,14 @@ class ArchdailySpider(scrapy.Spider):
         'ITEM_PIPELINES': {
             'ArchDaily.pipelines.MongoDBPipeline': 50
         },
-        'MONGO_URI': "./archurl.db",
-        'MONGO_DATABASE': "archurl.db"
-        # 'MONGODB_SERVER': "localhost",
-        # 'MONGODB_PORT': 27017,
-        # 'MONGODB_DB': "archdaily",
-        # 'MONGODB_COLLECTION': "urllist"
+        # For remote DB
+        'MONGO_URI': "mongodb://archdaily_0:ucBAOcwLHc8gofep@cluster0-shard-00-00-naxzz.mongodb.net:27017,cluster0-shard-00-01-naxzz.mongodb.net:27017,cluster0-shard-00-02-naxzz.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin",
+        'MONGO_DATABASE': "archdaily",
+        'MONGO_COLLECTION': "archurl"
+        # For local DB
+        # 'MONGO_URI': "mongodb://127.0.0.1:27017",
+        # 'MONGO_DATABASE': "archdaily",
+        # 'MONGO_COLLECTION': "archurl"
     }
 
     def parse(self, response):
@@ -40,29 +42,33 @@ class ArchdailySpider(scrapy.Spider):
         unicode_body = response.body_as_unicode()
 
         hxs = Selector(response)
-
+        # Enter the arch list page
         if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
+            # Read and parser current list page
             items = hxs.xpath('//li[@class="afd-search-list__item nrd-search-list__item"]').extract()
-            # log.msg('items: ' + ''.join(items), level=log.CRITICAL)
             title = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]//h2[@class="afd-search-list__title"]/text()').extract()
+                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/h2[@class="afd-search-list__title"]/text()').extract()
             url = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]//a[@class="afd-search-list__link"]/@href').extract()
+                '//li[@class="afd-search-list__item nrd-search-list__item"]/a[@class="afd-search-list__link"]/@href').extract()
             pic = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]//img[@class="afd-search-list__img "]/@src').extract()
+                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/figure/img[@class="afd-search-list__img "]/@src').extract()
             if len({len(items), len(title), len(url), len(pic)}) is not 1:
-                # Handle wrong items
+                # Handle wrong items number
                 os._exit()
+            # Save items into MongoDB with pipeline
             item = ArchdailyItem()
             for i in range(len(items)):
                 item['title'] = title[i]
-                item['url'] = url[i]
+                item['url'] = 'https://www.archdaily.com' + url[i]
                 item['pic'] = pic[i]
                 yield item
-            # log.msg('title: '+title, level=log.CRITICAL)
-            # log.msg('url: '+''.join(url), level=log.CRITICAL)
-            # log.msg('pic: '+pic, level=log.CRITICAL)
-        #
+            # Get next page url
+            next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()
+            # Add .pop() to pop url out of the list
+            next_url = 'https://www.archdaily.com' + next_url.pop()
+            # log.msg(next_url, level=log.CRITICAL)
+            yield Request(next_url, callback=self.parse)
+
         # all_urls = hxs.xpath('//a/@href').extract()
         # for url in all_urls:
         #     # log.msg(url, level=log.CRITICAL)
