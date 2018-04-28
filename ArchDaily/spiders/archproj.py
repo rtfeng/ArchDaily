@@ -64,13 +64,10 @@ class ArchdailySpider(scrapy.Spider):
                 yield item
             # Get next page url
             next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()
-            # Check if current page is the last one
-            # If it is, go back to the first page
-            if next_url is None:
-                next_url = hxs.xpath('//a[@class="next" and text()="First"]/@href').extract()
             # Add .pop() to pop url out of the list
             next_url = 'https://www.archdaily.com' + next_url.pop()
-            yield Request(next_url, callback=self.parse)
+            # log.msg(next_url, level=log.CRITICAL)
+            # yield Request(next_url, callback=self.parse)
 
         # all_urls = hxs.xpath('//a/@href').extract()
         # for url in all_urls:
