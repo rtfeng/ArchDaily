@@ -50,8 +50,8 @@ class ArchdailySpider(scrapy.Spider):
                 item['title'] = item_anchor.xpath('h2[@class="afd-search-list__title"]/text()').extract_first()
                 item['url'] = 'https://www.archdaily.com' + item_anchor.xpath('@href').extract_first()
                 item['pic'] = item_anchor.xpath('figure/img[@class="afd-search-list__img "]/@src').extract_first().replace('small_jpg', 'large_jpg')
-                item['date'] = datetime.datetime.now().strftime("%Y/%m/%d")
-                log.msg(item)
+                item['date'] = datetime.datetime.now().strftime("%Y%m%d")
+                # log.msg(item)
                 yield item
             # # Get next page url
             # next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()

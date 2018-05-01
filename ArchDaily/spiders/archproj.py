@@ -31,8 +31,8 @@ class ArchprojSpider(scrapy.Spider):
         current_url = response.url
         body = response.body
         unicode_body = response.body_as_unicode()
-        item = ArchprojItem()
 
+        item = ArchprojItem()
         hxs = Selector(response)
         # Get title
         title = hxs.xpath('//h1[@class="afd-title-big afd-title-big--left afd-title-big--full afd-title-big--bmargin-small afd-relativeposition"]/text()').extract()
