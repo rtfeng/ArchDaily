@@ -41,5 +41,8 @@ class MongoDBPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        self.db[self.collection_name].insert_one(dict(item))
-        return item
+        if self.db[self.collection_name].find({'title': dict(item['title'])}).count() != 0:
+            pass
+        else:
+            self.db[self.collection_name].insert_one(dict(item))
+            return item

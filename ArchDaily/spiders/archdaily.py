@@ -42,34 +42,26 @@ class ArchdailySpider(scrapy.Spider):
         hxs = Selector(response)
         # Enter the arch list page
         if current_url.startswith('https://www.archdaily.com/search/projects/categories/houses'):
-            # Read and parser current list page
-            items = hxs.xpath('//li[@class="afd-search-list__item nrd-search-list__item"]').extract()
-            title = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/h2[@class="afd-search-list__title"]/text()').extract()
-            url = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a[@class="afd-search-list__link"]/@href').extract()
-            pic = hxs.xpath(
-                '//li[@class="afd-search-list__item nrd-search-list__item"]/a/figure/img[@class="afd-search-list__img "]/@src').extract()
-            if len({len(items), len(title), len(url), len(pic)}) is not 1:
-                # Handle wrong items number
-                os._exit()
-            # Save items into MongoDB with pipeline
             item = ArchdailyItem()
-            for i in range(len(items)):
-                item['title'] = title[i]
-                item['url'] = 'https://www.archdaily.com' + url[i]
-                item['pic'] = pic[i].replace('small_jpg', 'slideshow')
+            # Read and parser current list page
+            item_anchors = hxs.xpath('//li[@class="afd-search-list__item nrd-search-list__item"]/a')
+            # log.msg('\n'.join(item_anchors))
+            for item_anchor in item_anchors:
+                item['title'] = item_anchor.xpath('h2[@class="afd-search-list__title"]/text()').extract_first()
+                item['url'] = 'https://www.archdaily.com' + item_anchor.xpath('@href').extract_first()
+                item['pic'] = item_anchor.xpath('figure/img[@class="afd-search-list__img "]/@src').extract_first().replace('small_jpg', 'large_jpg')
                 item['date'] = datetime.datetime.now().strftime("%Y/%m/%d")
+                log.msg(item)
                 yield item
-            # Get next page url
-            next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()
-            # Check if current page is the last one
-            # If it is, go back to the first page
-            if next_url is None:
-                next_url = hxs.xpath('//a[@class="next" and text()="First"]/@href').extract()
-            # Add .pop() to pop url out of the list
-            next_url = 'https://www.archdaily.com' + next_url.pop()
-            yield Request(next_url, callback=self.parse)
+            # # Get next page url
+            # next_url = hxs.xpath('//a[@rel="next" and @class="next" and text()="NEXT ›"]/@href').extract()
+            # # Check if current page is the last one
+            # # If it is, go back to the first page
+            # if next_url is None:
+            #     next_url = hxs.xpath('//a[@class="next" and text()="First"]/@href').extract()
+            # # Add .pop() to pop url out of the list
+            # next_url = 'https://www.archdaily.com' + next_url.pop()
+            # yield Request(next_url, callback=self.parse)
 
         # all_urls = hxs.xpath('//a/@href').extract()
         # for url in all_urls:

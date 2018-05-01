@@ -20,4 +20,5 @@ class ArchdailyItem(scrapy.Item):
 class ArchprojItem(scrapy.Item):
     title = scrapy.Field()
     picurls = scrapy.Field()
+    archinfo = scrapy.Field()
     pass

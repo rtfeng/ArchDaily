@@ -25,6 +25,8 @@ class ArchprojSpider(scrapy.Spider):
         'MONGO_COLLECTION': "archproj"
     }
 
+
+
     def parse(self, response):
         current_url = response.url
         body = response.body
@@ -37,11 +39,14 @@ class ArchprojSpider(scrapy.Spider):
         # Add strip() to remove \n
         item['title'] = title.pop().strip()
         log.msg(item['title'])
-        picurls = hxs.xpath('//li[@class="gallery-thumbs-item"]/a/img[@class="b-lazy b-loaded"]/@src').extract()
-        log.msg(len(picurls))
+        picurls = hxs.xpath('//li[@class="gallery-thumbs-item"]/a/img[@class="b-lazy"]/@data-src').extract()
+        # See what is inside. Class name or tag name in browser may wrong!
+        # picurls = hxs.xpath('//li[@class="gallery-thumbs-item"]/a/node()').extract()
         for i in range(len(picurls)):
-            picurls[i] = picurls[i].replace('thumb_jpg', 'slideshow')
+            picurls[i] = picurls[i].replace('thumb_jpg', 'large_jpg')
         item['picurls'] = picurls
         log.msg('\n'.join(item['picurls']))
+        archinfo = hxs.xpath('//ul[@class="afd-char-list js-char-list afd-char-list-box "]/li').extract()
+        log.msg(archinfo)
 
 
