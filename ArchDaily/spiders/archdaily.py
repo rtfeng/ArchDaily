@@ -12,7 +12,7 @@ class ArchdailySpider(scrapy.Spider):
     start_urls = ['https://www.archdaily.com/search/projects/categories/houses']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'ArchDaily.pipelines.MongoDBPipeline': 50
+            'ArchDaily.pipelines.MongoDBPipeline': 100
         },
         # For remote DB
         # 'MONGO_URI': "mongodb://archdaily_0:ucBAOcwLHc8gofep@cluster0-shard-00-00-naxzz.mongodb.net:27017,cluster0-shard-00-01-naxzz.mongodb.net:27017,cluster0-shard-00-02-naxzz.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin",

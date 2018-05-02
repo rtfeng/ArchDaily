@@ -3,6 +3,7 @@ import scrapy
 import re, os
 from ArchDaily.items import ArchprojItem, MyImageItem
 from scrapy import Selector, Request, log
+from pymongo import MongoClient
 
 
 class ArchprojSpider(scrapy.Spider):
@@ -10,10 +11,10 @@ class ArchprojSpider(scrapy.Spider):
     allowed_domains = ['www.archdaily.com',
                        'images.adsttc.com']
     # start_urls = ['https://www.archdaily.com/']
-    start_urls = ['https://www.archdaily.com/891738/loft-sao-paulo-treszerosete']
+    # start_urls = ['https://www.archdaily.com/891738/loft-sao-paulo-treszerosete']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'ArchDaily.pipelines.MyImagesPipeline': 1
+            'ArchDaily.pipelines.MyImagesPipeline': 50
             # 'scrapy.pipelines.images.ImagesPipeline': 1
             # 'scrapy.pipelines.files.FilesPipeline': 1
         },
@@ -28,6 +29,10 @@ class ArchprojSpider(scrapy.Spider):
         'MONGO_COLLECTION': "archproj"
     }
 
+
+    def __init__(self):
+        self.db = MongoClient("mongodb://127.0.0.1:27017")["archdaily"]
+        self.start_urls = self.db["archurl"].distinct('url')
 
 
     def parse(self, response):
@@ -60,11 +65,11 @@ class ArchprojSpider(scrapy.Spider):
         yield img_item
         # log.msg('\n'.join(proj_item['picurls']))
         archinfo_items = hxs.xpath('//li[@class="afd-char-item"]')
-        log.msg(len(archinfo_items.extract()))
+        # log.msg(len(archinfo_items.extract()))
         archinfo_items.extend(hxs.xpath('//li[@class="afd-char-item article-all-manufacturers hidden"]'))
-        log.msg(len(archinfo_items.extract()))
+        # log.msg(len(archinfo_items.extract()))
         archinfo_items.extend(hxs.xpath('//li[@class="afd-char-item hide"]'))
-        log.msg(len(archinfo_items.extract()))
+        # log.msg(len(archinfo_items.extract()))
         for archinfo_item in archinfo_items:
             # log.msg(archinfo_item.extract())
             archinfo_title = archinfo_item.xpath('h3[@class="afd-char-title"]/text()').extract_first()
